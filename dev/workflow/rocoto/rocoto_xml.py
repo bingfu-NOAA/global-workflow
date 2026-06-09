@@ -8,7 +8,7 @@ from typing import Dict
 from applications.applications import AppConfig
 from workflow_suite import WorkflowSuite
 from rocoto.workflow_tasks import get_wf_tasks
-from wxflow import which, mkdir, parse_j2tmpl
+from wxflow import which, mkdir, parse_j2yaml
 import rocoto.rocoto as rocoto
 from abc import ABC, abstractmethod
 from logging import getLogger
@@ -150,7 +150,7 @@ class RocotoXML(WorkflowSuite, ABC):
             'replyto': replyto,
             'comroot': self._base.get('COMROOT')
         }
-        template_content = parse_j2tmpl(template_path, context)
+        template_content = parse_j2yaml(template_path, context)
         return template_content
 
     def _write_xml(self, xml_file: str = None) -> None:

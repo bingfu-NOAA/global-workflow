@@ -21,6 +21,13 @@ class GEFSTasks(Tasks):
                      'log': f'{self.rotdir}/logs/@Y@m@d@H/{task_name}.log',
                      'maxtries': '&MAXTRIES;'
                      }
+
+        if self.options['do_atmos_prep']:
+            dependencies = []
+            dep_dict = {'type': 'task', 'name': f'{self.run}_init_recenter'}
+            dependencies.append(rocoto.add_dependency(dep_dict))
+            task_dict['dependency'] = dependencies
+
         task = rocoto.create_task(task_dict)
 
         return task
@@ -38,6 +45,51 @@ class GEFSTasks(Tasks):
                      'envars': self.envars,
                      'cycledef': self.run,
                      'command': f'{self.HOMEglobal}/dev/job_cards/rocoto/gen_control_ic.sh',
+                     'job_name': f'{self.pslot}_{task_name}_@H',
+                     'log': f'{self.rotdir}/logs/@Y@m@d@H/{task_name}.log',
+                     'maxtries': '&MAXTRIES;'
+                     }
+        task = rocoto.create_task(task_dict)
+
+        return task
+
+    def atmos_prep(self):
+
+        resources = self.get_resource('atmos_prep')
+        task_name = f'{self.run}_atmos_prep_mem#member#'
+        task_dict = {'task_name': task_name,
+                     'resources': resources,
+                     'envars': self.envars,
+                     'cycledef': self.run,
+                     'command': f'{self.HOMEglobal}/dev/job_cards/rocoto/atmos_prep.sh',
+                     'job_name': f'{self.pslot}_{task_name}_@H',
+                     'log': f'{self.rotdir}/logs/@Y@m@d@H/{task_name}.log',
+                     'maxtries': '&MAXTRIES;'
+                     }
+        member_var_dict = {'member': ' '.join([str(mem).zfill(3) for mem in range(0, self.nmem + 1)])}
+        member_metatask_dict = {'task_name': f'{self.run}_atmos_prep_mem#member#',
+                                'task_dict': task_dict,
+                                'var_dict': member_var_dict
+                                }
+
+        task = rocoto.create_task(member_metatask_dict)
+
+        return task
+
+    def init_recenter(self):
+
+        dependencies = []
+        dep_dict = {'type': 'task', 'name': f'{self.run}_atmos_prep'}
+        dependencies.append(rocoto.add_dependency(dep_dict))
+
+        resources = self.get_resource('init_recenter')
+        task_name = f'{self.run}_init_recenter'
+        task_dict = {'task_name': task_name,
+                     'resources': resources,
+                     'dependency': dependencies,
+                     'envars': self.envars,
+                     'cycledef': self.run,
+                     'command': f'{self.HOMEglobal}/dev/job_cards/rocoto/init_recenter.sh',
                      'job_name': f'{self.pslot}_{task_name}_@H',
                      'log': f'{self.rotdir}/logs/@Y@m@d@H/{task_name}.log',
                      'maxtries': '&MAXTRIES;'
@@ -81,6 +133,7 @@ class GEFSTasks(Tasks):
         return task
 
     def fcst(self):
+
         dependencies = []
         if self.app_config.gefstype in ['gefs-offline']:
             dep_dict = {'type': 'task', 'name': f'{self.run}_stage_ic'}

@@ -1,0 +1,11 @@
+#! /usr/bin/env bash
+
+########## config.atmos_prep ##########
+# atmos_prep
+
+echo "BEGIN: config.atmos_prep"
+
+# Get task specific resources
+source "${EXPDIR}/config.resources" atmos_prep
+
+echo "END: config.atmos_prep"

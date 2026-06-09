@@ -68,6 +68,7 @@ export DO_AWIPS="{{ DO_AWIPS }}"         # AWIPS products
 export MODE="{{ MODE }}" # cycled/forecast-only
 export DO_TEST_MODE="{{ DO_TEST_MODE }}" # option to change configuration for automated testing
 export GEFSTYPE="{{ GEFSTYPE }}" # gefs-real-time/gefs-offline
+export GEFSV13_REFORECAST="{{ GEFSV13_REFORECAST }}"
 ####################################################
 # DO NOT ADD MACHINE DEPENDENT STUFF BELOW THIS LINE
 # IF YOU HAVE TO MAKE MACHINE SPECIFIC CHANGES BELOW
@@ -142,7 +143,7 @@ fi
 export OPS_RES="C768" # Do not change
 
 # Resolution specific parameters
-export LEVS=128
+export LEVS=98
 export CASE="{{ CASE_CTL }}"  # CASE is required in GEFS to determine ocean/ice/wave resolutions
 export CASE_ENS="{{ CASE_ENS }}"
 export CASE_HIST="{{ CASE_HIST | default('${CASE}') }}"
@@ -214,13 +215,16 @@ export FHOUT_AERO=3
 export INTERVAL_GFS="{{ INTERVAL_GFS }}" # Frequency of GFS forecast
 export SDATE_GFS="{{ SDATE_GFS }}"
 
-export OFFSET_START_HOUR=0
+export OFFSET_START_HOUR="{{ OFFSET_START_HOUR }}"
 export USE_OCN_ENS_PERTURB_FILES="{{ USE_OCN_ENS_PERTURB_FILES }}"
 export USE_ATM_ENS_PERTURB_FILES="{{ USE_ATM_ENS_PERTURB_FILES }}"
 
 # GFS output and frequency
-export FHMIN_GFS=0
+export FHMIN_GFS="{{ FHMIN_GFS }}"
 export FHMAX_GFS="{{ FHMAX_GFS }}"
+
+export FHMIN_OCN="{{ FHMIN_OCN }}"
+export FHMIN_ICE="{{ FHMIN_ICE }}"
 # Intermediate times to stop forecast when running in segments
 breakpnts="{{ FCST_BREAKPOINTS }}"
 export FCST_SEGMENTS="${FHMIN_GFS},${breakpnts:+${breakpnts},}${FHMAX_GFS}"
@@ -234,7 +238,7 @@ export FHMIN_WAV=${OFFSET_START_HOUR:-0}
 export FHOUT_WAV=3
 export FHOUT_WAV_GFS=3
 export FHMAX_HF_WAV=120
-export FHOUT_HF_WAV=1
+export FHOUT_HF_WAV=3
 export FHMAX_WAV=${FHMAX_GFS}
 export FHMAX_WAV_GFS=${FHMAX_GFS}
 export FHMAX_HF_GFS=$(( FHMAX_HF_GFS > FHMAX_GFS ? FHMAX_GFS : FHMAX_HF_GFS ))
@@ -296,6 +300,11 @@ if [[ "${EXP_WARM_START}" = ".true." ]]; then
   else
     export IAU_FHROT=0
   fi
+fi
+
+if [[ "${GEFSV13_REFORECAST}" = "YES" ]]; then
+export IAU_FHROT=3
+export REPLAY_ICS="True"
 fi
 
 #Soil DA. Stage ic and archive look for these configs

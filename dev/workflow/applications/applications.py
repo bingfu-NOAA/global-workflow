@@ -197,6 +197,7 @@ class AppConfig(ABC, metaclass=AppConfigInit):
             run_options[run]['do_aero_anl'] = run_base.get('DO_AERO_ANL', False)
             run_options[run]['use_aero_anl'] = run_base.get('USE_AERO_ANL', False)
             run_options[run]['do_aero_fcst'] = run_base.get('DO_AERO_FCST', False)
+            run_options[run]['do_atmos_prep'] = run_base.get('DO_ATMOS_PREP', True)
 
             if run_base.get('GEFSTYPE', "") == "gefs-real-time":
                 run_options[run]['do_gefs_real_time'] = True

@@ -1,0 +1,11 @@
+#! /usr/bin/env bash
+
+########## config.atmos_prep ##########
+# atmos_prep
+
+echo "BEGIN: config.init_recenter"
+
+# Get task specific resources
+source "${EXPDIR}/config.resources" init_recenter
+
+echo "END: config.init_recenter"

@@ -70,6 +70,22 @@ case ${step} in
     export memory="500GB"
     ;;
 
+  "atmos_prep")
+    export walltime="00:30:00"
+    export ntasks=31
+    export tasks_per_node=31
+    export threads_per_task=1
+    export memory="500GB"
+    ;;
+
+  "init_recenter")
+    export walltime="00:30:00"
+    export ntasks=1
+    export tasks_per_node=1
+    export threads_per_task=1
+    export memory="500GB"
+    ;;
+
   "waveinit")
     export walltime="00:10:00"
     export ntasks=12

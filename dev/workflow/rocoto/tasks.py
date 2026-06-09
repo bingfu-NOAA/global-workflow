@@ -13,7 +13,7 @@ __all__ = ['Tasks']
 class Tasks:
     SERVICE_TASKS = ['arch_vrfy', 'earc_vrfy', 'stage_ic', 'globus', 'ens_globus']
     DTN_TASKS = ['arch_tars', 'earc_tars', 'fetch']
-    VALID_TASKS = ['aerosol_init', 'stage_ic', 'gen_control_ic', 'fetch', 'globus', 'ens_globus',
+    VALID_TASKS = ['aerosol_init', 'stage_ic', 'gen_control_ic', 'atmos_prep', 'init_recenter', 'fetch', 'globus', 'ens_globus',
                    'prep_sfc', 'prep', 'anal', 'sfcanl_regrid', 'sfcanl_gcycle', 'analcalc', 'analdiag', 'arch_vrfy', 'arch_tars',
                    'ecen_fv3jedi', 'analcalc_fv3jedi', 'cleanup',
                    'atmanlinit', 'atmanlvar', 'atmanlfv3inc', 'atmanlfinal',

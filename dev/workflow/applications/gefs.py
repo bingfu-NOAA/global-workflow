@@ -77,6 +77,9 @@ class GEFSAppConfig(AppConfig):
         if options['do_gefs_real_time']:
             configs += ['gen_control_ic']
 
+        if options['do_atmos_prep']:
+            configs += ['atmos_prep', 'init_recenter']
+
         if options['do_bufrsnd']:
             configs += ['postsnd']
 
@@ -142,7 +145,10 @@ class GEFSAppConfig(AppConfig):
             Dictionary with run name as key and list of task names as value
         """
         options = self.run_options[self.run]
-        tasks = ['stage_ic']
+        if options['do_atmos_prep']:
+            tasks = ['atmos_prep', 'init_recenter', 'stage_ic']
+        else:
+            tasks = ['stage_ic']
 
         if options['do_gefs_real_time']:
             tasks += ['gen_control_ic']
