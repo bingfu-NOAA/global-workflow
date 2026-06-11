@@ -9,22 +9,35 @@ if [[ ${STRICT:-NO} == "YES" ]]; then
 	set -eu
 fi
 
+case $cyc in
+    00) memshift=0;;
+    06) memshift=20;;
+    12) memshift=40;;
+    18) memshift=60;;
+esac
+export ENKF_SEARCH_LEAP=${ENKF_SEARCH_LEAP:-30}
+export MAX_ENKF_SEARCHES=${MAX_ENKF_SEARCHES:-3}
+export pdycycp=$($NDATE -6 $PDY$cyc)
+export pdyp=$(echo $pdycycp|cut -c1-8)
+export cycp=$(echo $pdycycp|cut -c9-10)
+export CDATE=$PDY$cyc
+
 export mem=$1
 export nmem=$(echo $mem|cut -c 2-)
 nmem=${nmem#0}
-
+NCP=${NCP:-"/usr/bin/cp -p"}
 export INIDIR=$DATA
-export OUTDIR=$ROTDIR/mem$mem
-INITDIR=$GESOUT/mem/$mem
+export OUTDIR=$ICSDIR/gefs.$PDY/$cyc/mem$mem/chgres
+#INITDIR=$ICSDIR/mem/$mem
 mkdir -p $INIDIR
 mkdir -p $OUTDIR
-mkdir -p $INITDIR
+#mkdir -p $INITDIR
 
 cd $INIDIR
 
 if [[ $mem = 000 ]] ;then
 	# Control intial conditions from current GFS cycle
-	ATMFILE=$COMINgfs/analysis/atmos/gfs.t${cyc}z.analysis.atm.a006.nc
+	ATMFILE=$COMINgfs/gfs.$PDY/$cyc/analysis/atmos/gfs.t${cyc}z.analysis.atm.a006.nc
 	if [[ -f $ATMFILE ]]; then
 		$NCP $ATMFILE $INIDIR
 		export ATM_FILES_INPUT="gfs.t${cyc}z.analysis.atm.a006.nc"
@@ -46,7 +59,7 @@ else
 		fi
 
 		memchar="mem"$(printf %03i $cmem)
-		ATMFILE="$COMINenkf/$memchar/model/atmos/history/enkfgdas.t${cycp}z.atm.f006.nc"
+		ATMFILE="$COMINenkf/enkfgdas.$PDYm1/$cycp/$memchar/model/atmos/history/enkfgdas.t${cycp}z.atm.f006.nc"
 
 		if [[ -f $ATMFILE ]]; then
 			$NCP $ATMFILE $INIDIR
@@ -72,7 +85,7 @@ fi
 
 if [[ $CONVERT_SFC == ".true." ]]; then
 	export SFC_FILES_INPUT="gfs.t${cyc}z.analysis.sfc.a006.nc"
-	SFCFILE="$COMINgfs/$SFC_FILES_INPUT"
+	SFCFILE="$COMINgfs/gfs.$PDY/$cyc/analysis/atmos/$SFC_FILES_INPUT"
 	if [[ -f $SFCFILE ]]; then
 		$NCP $SFCFILE $INIDIR
 	else
@@ -86,11 +99,13 @@ fi
 export CRES=$(echo $CASE |cut -c2-5)
 export COMIN=$INIDIR
 export INPUT_TYPE="gaussian_netcdf"
-export FIXfv3=$FIXgfs/fix_fv3_gmted2010/C$CRES
-export FIXsfc=$FIXfv3/fix_sfc
+export FIXfv3=$FIXorog/$CASE
+export FIXsfc=$FIXfv3/sfc
+APRUN="mpiexec -l -n 36 -ppn 36 --cpu-bind depth --depth 1"
+ocn="025"
 #############################################################
 # Execute the script
-$EXECglobal/chgres_cube.sh
+$USHufsutil/chgres_cube.sh
 export err=$?
 if [[ $err != 0 ]]; then
 	echo "FATAL ERROR in $(basename $BASH_SOURCE): chgres_cube failed!"
@@ -108,17 +123,17 @@ touch ${OUTDIR}/chgres_atm.log  # recenter can start now
 
 if [[ $CONVERT_SFC == ".true." ]]; then
 	# Copy sfc files to the nwges directory for all members
-	for mem2 in $memberlist; do
-		INITDIR2=$GESOUT/init/$mem2
-		mkdir -p $INITDIR2
+#	for mem2 in $memberlist; do
+#		INITDIR2=$GESOUT/init/$mem2
+#		mkdir -p $INITDIR2
 		for tile in tile1 tile2 tile3 tile4 tile5 tile6; do
-			$NCP ${DATA}/out.sfc.${tile}.nc $INITDIR2/sfc_data.${tile}.nc
+			mv ${DATA}/out.sfc.${tile}.nc $OUTDIR/sfc_data.${tile}.nc
 		done
-	done
+#	done
 fi
 
 # Copy control file to init
-$NCP $OUTDIR/gfs_ctrl.nc $INITDIR
+#$NCP $OUTDIR/gfs_ctrl.nc $INITDIR
 
 if [[ $SENDCOM == "YES" ]]; then
 	MODCOM=$(echo ${NET}_${COMPONENT} | tr '[a-z]' '[A-Z]')

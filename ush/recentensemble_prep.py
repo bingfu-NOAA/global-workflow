@@ -97,7 +97,7 @@ def main():
 
 
 def RemoveUnusedVars(sInWS,sFileName,sVars,iTile=-1):
-    sControlFile = sInWS + "/c00/{0}{1}.nc".format(sFileName, 1)
+    sControlFile = sInWS + "/mem000/chgres/{0}{1}.nc".format(sFileName, 1)
     import os
     if os.path.exists(sControlFile):
         import netCDF4
@@ -142,12 +142,12 @@ def getMems_mean(iTile, Npert, sInWS, sOutWS, sFileName, sVars):
     print(dt.datetime.now())
 
     for iPert in range(Npert):
-        sPath = sOutWS + "/p{0:02}".format(iPert + 1)
+        sPath = sOutWS + "/mem{0:03}".format(iPert + 1)
         with suppress(FileExistsError):
             os.mkdir(sPath)
 
-        sInFile = sInWS + "/p{0:02}/{1}{2}.nc".format(iPert + 1, sFileName, iTile)
-        sOutFile = sOutWS + "/p{0:02}/{1}{2}.nc".format(iPert + 1, sFileName, iTile)
+        sInFile = sInWS + "/mem{0:03}/chgres/{1}{2}.nc".format(iPert + 1, sFileName, iTile)
+        sOutFile = sOutWS + "/mem{0:03}/input/{1}{2}.nc".format(iPert + 1, sFileName, iTile)
 
         shutil.copyfile(sInFile, sOutFile)
         print("Copying file from {0} to {1}".format(sInFile, sOutFile))
@@ -180,7 +180,7 @@ def getMems_mean(iTile, Npert, sInWS, sOutWS, sFileName, sVars):
     return
 
 
-def calValue(ensmem, sVar,  mem_mean, memno, Npert=20):
+def calValue(ensmem, sVar,  mem_mean, memno, Npert=30):
     VarValue = ensmem[sVar][:]
     if memno == 0:
         mem_mean = VarValue / float(Npert)

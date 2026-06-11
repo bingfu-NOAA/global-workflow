@@ -1,7 +1,5 @@
 #!/bin/ksh
 
-echo "$(date -u) begin ${.sh.file}"
-
 if [[ ${STRICT:-NO} == "YES" ]]; then
 	# Turn on strict bash error checking
 	set -eu
@@ -46,7 +44,7 @@ echo "               FORECAST cycle TIME is $cycle"
 echo "  "
 echo " ------------------------------------------------------------"
 echo "          processing info for this execution"
-echo " Home directory is ............................ $HOMEgefs"
+echo " Home directory is ............................ $HOMEglobal"
 echo " Processing directory for files.. ............. $DATA"
 echo "  "
 echo " Network id is ................................ $NET"
@@ -61,12 +59,6 @@ export warm_start=${warm_start:-"false"}
 echo "DATA=$DATA"
 
 # Set environment.
-VERBOSE=${VERBOSE:-"YES"}
-if [ $VERBOSE = "YES" ]; then
-   echo "$(date) EXECUTING ${.sh.file} $*" >&2
-   set -x
-fi
-
 export CASE=${CASE:-384}
 ntiles=${ntiles:-6}
 
@@ -77,25 +69,52 @@ NLN=${NLN:-"/bin/ln -sf"}
 NMV=${NMV:-"/bin/mv -uv"}
 
 # Scripts
-RECENATMPY_PREP=${RECENATMPY:-$HOMEgefs/util/ush/recentensemble_prep.py}
-RECENATMPY_POST=${RECENATMPY:-$HOMEgefs/util/ush/recentensemble_post.py}
+RECENATMPY_PREP=${RECENATMPY:-$HOMEglobal/ush/recentensemble_prep.py}
+RECENATMPY_POST=${RECENATMPY:-$HOMEglobal/ush/recentensemble_post.py}
 
 err=0
+export warm_start=".false."
+
+export pert_scaling=${pert_scaling:-0.8}
+npert=30
+(( recentmem = npert ))
+export recentmem=$recentmem
+export npert=$npert
+
+#cycles from fhrpstart back to fhrpend  (hr)
+#export fhrpstart=6
+#export fhrpend=96
+
+export pdycycp=$($NDATE -6 $PDY$cyc)
+export pdyp=$(echo $pdycycp|cut -c1-8)
+export cycp=$(echo $pdycycp|cut -c9-10)
+
+####################################
+# Specify Timeout Behavior of Post
+#
+# SLEEP_TIME - Amount of time to wait for
+#              a restart file before exiting
+# SLEEP_INT  - Amount of time to wait between
+#              checking for restart files
+####################################
+export SLEEP_TIME=600
+export SLEEP_INT=5
+
 SLEEP_LOOP_MAX=$((SLEEP_TIME / SLEEP_INT))
 if [ $warm_start = ".false." ]; then
 	export FILENAME='gfs_data.tile'
-	export FILEINPATH=$GESIN/enkf
-	export FILEOUTPATH=$GESOUT/init
+	export FILEINPATH=$ICSDIR/gefs.$PDY/$cyc
+	export FILEOUTPATH=$ICSDIR/gefs.$PDY/$cyc
 
 	if [ $npert -gt 0 ]; then
 		# To run recenter-prep
 		imem=1
 		while [[ imem -le $npert ]]; do
-			sMem=p$(printf %02i $imem)
-
+			sMem=mem$(printf %03i $imem)
+			mkdir -p $FILEOUTPATH/$sMem/input
 			ic=1
 			while [ $ic -le $SLEEP_LOOP_MAX ]; do
-				sInputFile=$FILEINPATH/${sMem}/chgres_atm.log
+				sInputFile=$FILEINPATH/$sMem/chgres/chgres_atm.log
 				echo $sInputFile
 				if [ -f ${sInputFile} ]; then
 					break
@@ -120,9 +139,9 @@ if [ $warm_start = ".false." ]; then
             (( imem++ ))
 		done # while [[ imem -le $npert ]]; do
 
-		# To copy p01 data to init/
-		mkdir -p $FILEOUTPATH
-		$NCP $FILEINPATH/p01/${FILENAME}*  $FILEOUTPATH/.
+		# To copy p01 data to be used as sample data in which names of vars be extracted/
+#		mkdir -p $FILEOUTPATH
+		$NCP $FILEINPATH/mem001/chgres/${FILENAME}*  $FILEOUTPATH/.
 
 		rm -rf poescript*
 
@@ -159,7 +178,7 @@ if [ $warm_start = ".false." ]; then
 		# Ro run recenter-post
 		ic=1
 		while [ $ic -le $SLEEP_LOOP_MAX ]; do
-			sInputFile=$FILEINPATH/c00/chgres_atm.log
+			sInputFile=$FILEINPATH/mem000/chgres/chgres_atm.log
 			echo $sInputFile
 			if [ -f ${sInputFile} ]; then
 				break
@@ -182,8 +201,8 @@ if [ $warm_start = ".false." ]; then
 			fi
 		done  # while [ $ic -le $SLEEP_LOOP_MAX ]
 
-		mkdir -p $FILEOUTPATH/c00
-		$NCP $FILEINPATH/c00/${FILENAME}*  $FILEOUTPATH/c00/.
+		mkdir -p $FILEOUTPATH/mem000/input
+                $NCP $FILEINPATH/mem000/chgres/*  $FILEOUTPATH/mem000/input
 
 		rm -rf poescript*
 
@@ -217,8 +236,8 @@ if [ $warm_start = ".false." ]; then
 			exit $err
 		fi
 	else # npert=0
-		mkdir -p $FILEOUTPATH/c00
-		$NCP $FILEINPATH/c00/${FILENAME}*  $FILEOUTPATH/c00/.
+		mkdir -p $FILEOUTPATH/mem000/input
+		$NCP $FILEINPATH/mem000/chgres/${FILENAME}*  $FILEOUTPATH/mem000/input
 	fi
 else
 	echo "FATAL ERROR in ${.sh.file}: init_recenter only works for cold start"
@@ -247,7 +266,7 @@ if [[ $SENDCOM == YES ]]; then
     done
 fi
 
-rm -rf $GESOUT/enkf
+#rm -rf $GESOUT/enkf
 echo "$(date -u) end ${.sh.file}"
 
 exit $err

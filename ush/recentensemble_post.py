@@ -122,7 +122,7 @@ def main():
 
 
 def RemoveUnusedVars(sInWS,sFileName,sVars,iTile=-1):
-    sControlFile = sInWS + "/c00/{0}{1}.nc".format(sFileName, 1)
+    sControlFile = sInWS + "/mem000/chgres/{0}{1}.nc".format(sFileName, 1)
     import os
     if os.path.exists(sControlFile):
         import netCDF4
@@ -165,7 +165,7 @@ def do_Recenter(iTile, Npert, sInWS, sOutWS, sFileName, sVars, pert_scaling=1.0)
     print(dt.datetime.now())
 
     print("  Reading Control Member Data ...")
-    sCFile = sInWS + "/c00/{0}{1}.nc".format(sFileName, iTile)
+    sCFile = sInWS + "/mem000/chgres/{0}{1}.nc".format(sFileName, iTile)
     #print(sCFile)
     nc_fid = Dataset(sCFile, 'r')
     for k in range(len(sVars)):
@@ -192,7 +192,7 @@ def do_Recenter(iTile, Npert, sInWS, sOutWS, sFileName, sVars, pert_scaling=1.0)
     for iPert in range(Npert):
         #print(iTile, " - ", iPert)
 
-        sOutFile = sOutWS + "/p{0:02}/{1}{2}.nc".format(iPert + 1, sFileName, iTile)
+        sOutFile = sOutWS + "/mem{0:03}/input/{1}{2}.nc".format(iPert + 1, sFileName, iTile)
         #print("Working on the Tile {0} - ".format(iTile) + sOutFile)
 
         nc_fid = Dataset(sOutFile, 'a')

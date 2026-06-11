@@ -12,8 +12,8 @@ export HOMEgfs=${HOMEgfs:-${HOMEglobal}}
 export HOMEufs=${HOMEufs:-${HOMEgfs}}
 export USHgfs=$USHglobal
 export FIXgfs=$FIXglobal
-export FIXfv3=${FIXfv3:-$FIXgfs/fix_fv3_gmted2010}
-export FIXam=${FIXam:-$FIXgfs/fix_am}
+export FIXfv3=${FIXfv3:-$FIXorog}
+export FIXam=${FIXam:-$FIXgfs/am}
 export VCOORD_FILE=${VCOORD_FILE:-$FIXam/global_hyblev.l${LEVS}.txt}
 
 mem=$ENSMEM

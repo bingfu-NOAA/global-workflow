@@ -18,6 +18,9 @@ source "${USHglobal}/set_strict.sh"
 PYTHONPATH="${HOMEglobal}/ush/python${PYTHONPATH:+:${PYTHONPATH}}"
 export PYTHONPATH
 
+export total_tasks=${total_tasks:-6}
+export APRUN_MPMD=${gefsmpexec_mpmd:-"mpiexec -n $total_tasks cfp mpmd_cmdfile"}
+
 # Execute staging
 "${SCRglobal}/exgefs_atmos_init_recenter.sh" && true
 err=$?
